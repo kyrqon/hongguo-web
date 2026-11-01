@@ -41,5 +41,6 @@
     "dplayer": {
       "axios": "^1.21.0"
     }
-  }
+  },
+  "license": "Apache-2.0"
 }

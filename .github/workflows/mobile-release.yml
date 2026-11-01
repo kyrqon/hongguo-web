@@ -1,0 +1,176 @@
+name: Build mobile packages and release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag, for example v0.1.0-preview.1'
+        required: false
+        type: string
+      publish_release:
+        description: 'Publish a prerelease after all builds succeed'
+        required: true
+        default: false
+        type: boolean
+permissions:
+  contents: read
+concurrency:
+  group: mobile-${{ github.ref }}-${{ inputs.release_tag }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    outputs:
+      version: ${{ steps.metadata.outputs.version }}
+      tag: ${{ steps.metadata.outputs.tag }}
+      publish: ${{ steps.metadata.outputs.publish }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+      - id: metadata
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          PUBLISH_RELEASE: ${{ inputs.publish_release }}
+        run: node scripts/ci-metadata.mjs
+      - run: npm ci
+      - name: Ensure FFmpeg is available
+        run: |
+          if ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y ffmpeg
+          fi
+      - run: npm test
+      - run: node --test src/apiConfig.test.ts
+      - run: npm run build
+        env:
+          VITE_API_BASE_URL: ${{ vars.MOBILE_API_URL }}
+      - run: node scripts/package-web.mjs
+        env:
+          VERSION: ${{ steps.metadata.outputs.version }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: web-dist
+          path: dist/
+          retention-days: 7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: web-and-backend
+          path: release/*
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+  android:
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: web-dist
+          path: dist
+      - run: bash scripts/build-android.sh
+        env:
+          VERSION: ${{ needs.verify.outputs.version }}
+          BUILD_NUMBER: ${{ github.run_number }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: android-packages
+          path: release/*
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+  ios:
+    needs: verify
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: web-dist
+          path: dist
+      - run: bash scripts/build-ios.sh
+        env:
+          VERSION: ${{ needs.verify.outputs.version }}
+          BUILD_NUMBER: ${{ github.run_number }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ios-packages
+          path: release/*
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+  release:
+    needs: [verify, android, ios]
+    if: needs.verify.outputs.publish == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: '*-packages'
+          path: release
+          merge-multiple: true
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: web-and-backend
+          path: release
+      - run: node scripts/release-notes.mjs
+        env:
+          VERSION: ${{ needs.verify.outputs.version }}
+          BUILD_COMMIT: ${{ github.sha }}
+      - name: Publish prerelease with verified assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.verify.outputs.tag }}
+          VERSION: ${{ needs.verify.outputs.version }}
+        run: |
+          refs="$(gh api "repos/$GH_REPO/git/matching-refs/tags/$RELEASE_TAG" --jq '.[].ref')"
+          if printf '%s\n' "$refs" | grep -Fqx "refs/tags/$RELEASE_TAG"; then
+            tagged_sha="$(gh api "repos/$GH_REPO/commits/$RELEASE_TAG" --jq .sha)"
+            if [[ "$tagged_sha" != "$GITHUB_SHA" ]]; then
+              echo 'The release tag points to a different commit; refusing to publish mismatched packages.' >&2
+              exit 1
+            fi
+          fi
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo 'This release already exists; refusing to overwrite published assets.' >&2
+            exit 1
+          fi
+          mapfile -d '' assets < <(find release -maxdepth 1 -type f ! -name release-notes.md -print0)
+          gh release create "$RELEASE_TAG" "${assets[@]}" --target "$GITHUB_SHA" --title "红果剧场 v$VERSION 预览版" --notes-file release/release-notes.md --prerelease

@@ -10,3 +10,4 @@ ios/
 .DS_Store
 *.log
 artifacts/
+release/

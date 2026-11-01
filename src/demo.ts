@@ -11,6 +11,6 @@ export const demos: Drama[] = [
 export function demoEpisodes(drama: Drama): Episode[] {
   return Array.from({ length: drama.episodeCount }, (_, index) => ({ id: `${drama.id}-ep-${index + 1}`, index: index + 1, title: `第 ${index + 1} 集` }))
 }
-// Sintel trailer excerpt, © Blender Foundation | durian.blender.org, CC BY 3.0.
-// Served locally so the labelled demonstration does not depend on an external video host.
+// Generated locally with FFmpeg; no third-party film or drama footage.
+// See scripts/generate-demo.mjs for the reproducible source.
 export const demoVideo = '/videos/demo.mp4'

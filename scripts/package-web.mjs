@@ -1,0 +1,17 @@
+import { cpSync, existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { resolve } from 'node:path';
+const version = process.env.VERSION || '0.1.0';
+if (!/^\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?$/.test(version)) throw new Error('Invalid version');
+mkdirSync('release', { recursive: true });
+for (const file of ['dist/index.html', 'dist/licenses/index.html', 'dist/licenses/PROJECT-LICENSE.txt', 'dist/licenses/PROJECT-NOTICE.txt']) if (!existsSync(file)) throw new Error(`Missing required release resource: ${file}`);
+const artifact = (suffix) => resolve(`release/hongguo-web-v${version}-${suffix}.zip`);
+execFileSync('zip', ['-q', '-r', artifact('web'), '.'], { cwd: resolve('dist'), stdio: 'inherit' });
+const stage = resolve('artifacts/backend-package');
+mkdirSync(stage, { recursive: true });
+mkdirSync(`${stage}/server`, { recursive: true });
+for (const name of readdirSync('server')) if (name.endsWith('.mjs') && !name.endsWith('.test.mjs')) cpSync(`server/${name}`, `${stage}/server/${name}`);
+cpSync('dist', `${stage}/dist`, { recursive: true });
+for (const name of ['package.json', 'package-lock.json', '.env.example', 'README.md', 'THIRD_PARTY_NOTICES.md', 'LICENSE', 'NOTICE']) if (existsSync(name)) cpSync(name, `${stage}/${name}`);
+execFileSync('zip', ['-q', '-r', artifact('backend-source'), '.'], { cwd: stage, stdio: 'inherit' });
+rmSync(stage, { recursive: true, force: true });

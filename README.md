@@ -66,7 +66,7 @@ npm start
 
 已经成功取得的签名播放模型按上游 `expires_at` 缓存，并提前 15 秒失效；未提供失效时间时最多缓存 5 分钟。这样切回已解析分集或重试播放器不会每隔 30 秒重新消耗一次模型请求。取消或超时的播放请求会终止对应网络操作，已取消的排队分集不会继续请求上游。
 
-示例视频为本地《Sintel》预告片前约 30 秒，含音频，用于测试播放和音量；© Blender Foundation · [durian.blender.org](https://durian.blender.org/)，采用 [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) 许可。示例剧名、封面与视频内容不对应。
+示例视频是使用 FFmpeg 在本地生成的 30 秒有声图形测试片，不含第三方电影或真实短剧片段；生成方式见 `scripts/generate-demo.mjs`。示例剧名、封面与视频内容不对应。图片来源见 `public/images/SOURCES.md`；第三方许可文本随静态资源保存在 `public/licenses/`，汇总见 `THIRD_PARTY_NOTICES.md`。
 
 当 SDK 正常返回受保护分集的播放地址和内容密钥时，后端使用该密钥处理 CENC，密钥保留在后端。已确认的 AVC/H.264 受保护片源使用 `copy` 快速转封装为 fMP4；HEVC（包括 `bytevc1`）、AV1 或未知编码使用兼容转码，输出 H.264 Main、`avc1`、`yuv420p` 和 AAC 双声道 48kHz/128kbps。默认优先选择兼容的 720 档，显式选择其他清晰度时按源尺寸输出，竖屏最高 1080×1920，横屏最高 1920×1080，保持纵横比，不放大小尺寸片源；超出上限的 AVC 也会转码。菜单标签按实际输出尺寸生成。未加密的非 AVC 片源也使用相同兼容转码，未加密且无需缩小的 AVC 可直接播放。
 
@@ -93,7 +93,7 @@ npm start
 
 ## Android / iOS 打包
 
-仓库已准备 `capacitor.config.ts`，静态资源目录为 `dist/`。Capacitor 只打包前端，**不会把 Node API 一起放进手机**；先运行或部署自己的 Node 后端，再在构建环境中设置 `VITE_API_BASE_URL`。
+仓库已准备 `capacitor.config.ts`，静态资源目录为 `dist/`。Capacitor 只打包前端，**不会把 Node API 一起放进手机**。手机端没有有效后端地址时，首次启动显示「连接你的短剧服务」，保存 HTTPS 根地址后进入播放器；顶栏「服务地址」可修改或清除地址。也可以在构建环境中用 `VITE_API_BASE_URL` 预设地址。Web 默认继续使用同源 API，使用说明内也能主动修改服务地址。
 
 例如在 `.env.local` 中设置：
 
@@ -125,7 +125,35 @@ npm run mobile:ios
 
 在 Xcode 里设置自己的签名团队和 Bundle ID，然后运行到模拟器或真机。Capacitor 8 官方要求 Xcode 26+，支持 iOS 15+；详见 [iOS 文档](https://capacitorjs.com/docs/ios)。Windows 可以开发网页和 Android 工程，不能在本机使用 Xcode 生成 iOS 安装包。
 
-平台目录创建后，前端更新执行 `npm run mobile:sync`，再用对应 IDE 运行。当前交付包含 Web 源码和原生壳配置，未生成、签名或真机验证 APK / IPA。Web manifest 用于浏览器独立窗口展示，不提供视频离线下载。
+平台目录创建后，前端更新执行 `npm run mobile:sync`，再用对应 IDE 运行。Web manifest 用于浏览器独立窗口展示，不提供视频离线下载。
+
+### GitHub Actions 与预览发布
+
+[Actions](https://github.com/kyrqon/hongguo-web/actions) 中有两条工作流：
+
+- `Web and API checks`：推送 `main` 或提交 PR 时运行服务端测试、服务地址配置测试和 Web 构建。
+- `Build mobile packages and release`：推送 `v*` 标签时构建并发布预览 Release；也可以手动执行，仅构建或勾选发布。已有标签必须指向同一提交，已发布的 Release 不会被覆盖。
+
+移动构建先在 Linux 检查并构建 Web，然后分别使用 Java 21 / Android SDK 36 和 macOS 15 / Xcode 26 编译原生壳。原生平台目录在 CI 中生成并同步，不提交生成的 `android/`、`ios/`、签名材料或本地数据。GitHub 仓库变量 `MOBILE_API_URL` 可提供可选的 HTTPS 后端预设；不设置时安装包使用首次连接页。
+
+[Releases](https://github.com/kyrqon/hongguo-web/releases) 中成功的预览发布包含：
+
+| 文件 | 用途 |
+| --- | --- |
+| `*-android-debug.apk` | 可安装的 Android 调试预览包。使用构建机调试签名，后续预览签名可能不同，升级时可能需先卸载旧版。不是应用商店生产包。 |
+| `*-ios-unsigned.ipa` | 未签名 arm64 真机编译产物，供检查或后续签名；不能直接安装到 iPhone，也不是 TestFlight/App Store 安装包。 |
+| `*-ios-simulator.app.zip` | 供 arm64/x86_64 Mac 上的 iOS 模拟器安装；解压后执行 `xcrun simctl install booted /path/to/App.app`。 |
+| `*-web.zip` | Web 静态资源及离线许可说明。 |
+| `*-backend-source.zip` | Node API、Web 资源、依赖锁文件和配置示例。解压后安装 Node.js / FFmpeg，执行 `npm ci --omit=dev`，复制并修改 `.env.example`，用 `npm start` 启动。 |
+| `SHA256SUMS.txt` | 下载文件校验值。 |
+
+当前发布流程没有配置 Apple 证书或商店分发签名，不会把未签名 IPA 描述成可真机安装包。原生编译成功也不代表已完成设备体验、跨站 Cookie 或长期视频播放验证。
+
+## 许可证
+
+本项目自有代码使用 [Apache-2.0](LICENSE)，第三方代码与素材遵循各自原始许可，完整文本见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 和 `public/licenses/`。安装包首次连接页也提供离线许可入口。
+
+`openhongguo` 的正式许可证为 Apache-2.0，并附 Go BSD 许可；上游 README 另有学习研究、禁止商业用途的说明，本仓库一并披露。代码许可不代表获得红果、抖音的官方授权，也不包含真实剧集的再分发许可。此项目不随发行包提供真实短剧文件、账号会话或设备档案。
 
 ## 项目结构
 
@@ -144,11 +172,12 @@ dist/                   编译后的 Web 资源
 
 ```powershell
 npm test
+node --test src/apiConfig.test.ts
 npm run build
 ```
 
 本轮 18 项服务端测试通过，覆盖账号和数据隔离、历史持久化、受保护播放地址不暴露密钥、SDK 字段转换、真实榜单备用目录及游标、签名模型缓存、429 等待、取消和超时、清晰度选源和模型复用，以及合成 HEVC 经完整 HTTP/FFmpeg 管线输出 H.264/AAC 的兼容性验证。清晰度测试实际检查了 1080×1920 与 360×640 输出；偏移测试使用前红后蓝的长 GOP 视频，确认从 2.2 秒开播时首帧来自蓝色段、剩余时长正确。
 
-指定剧集《退役归来，这个保镖不好惹》（剧集 ID `7697622096326708286`）的第 51、100 集已取得真实 SDK 播放模型，并各完成 4 秒真实视频解码验证，输出确认是 H.264/AAC。桌面浏览器已实际播放第 51、100 集，并验证第 51→52→53 集自动续播。此项不是示例视频验证；它只证明这些分集在本次测试时可正常取流和播放，不承诺整部剧、长期连续播放或所有上游分集始终可用。Android/iOS 安装包尚未生成、签名或真机验证。
+指定剧集《退役归来，这个保镖不好惹》（剧集 ID `7697622096326708286`）的第 51、100 集已取得真实 SDK 播放模型，并各完成 4 秒真实视频解码验证，输出确认是 H.264/AAC。桌面浏览器已实际播放第 51、100 集，并验证第 51→52→53 集自动续播。此项不是示例视频验证；它只证明这些分集在本次测试时可正常取流和播放，不承诺整部剧、长期连续播放或所有上游分集始终可用。原生安装包的生成结果以 Actions 和 Releases 为准，尚未真机验证。
 
 新增控件已通过桌面和 390px 窄屏浏览器检查。真实第 51 集从约 64.6 秒切换 1080p 与 480p 后，实际输出分别为 1080×1920、480×854，浏览器保留进度及暂停状态；已验证 3 倍速选择与切集保留、上一集/下一集快捷按钮、最后一集禁用下一集，以及两个选集入口再次点击收起。

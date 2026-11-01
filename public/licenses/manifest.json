@@ -1,0 +1,324 @@
+[
+  {
+    "name": "@capacitor/android",
+    "version": "8.6.0",
+    "license": "MIT",
+    "files": [
+      "capacitor-android-8.6.0/LICENSE"
+    ]
+  },
+  {
+    "name": "@capacitor/core",
+    "version": "8.6.0",
+    "license": "MIT",
+    "files": [
+      "capacitor-core-8.6.0/LICENSE"
+    ]
+  },
+  {
+    "name": "@capacitor/ios",
+    "version": "8.6.0",
+    "license": "MIT",
+    "files": [
+      "capacitor-ios-8.6.0/LICENSE"
+    ]
+  },
+  {
+    "name": "agent-base",
+    "version": "6.0.2",
+    "license": "MIT",
+    "files": [
+      "agent-base-6.0.2/LICENSE.from-README.txt"
+    ]
+  },
+  {
+    "name": "asynckit",
+    "version": "0.4.0",
+    "license": "MIT",
+    "files": [
+      "asynckit-0.4.0/LICENSE"
+    ]
+  },
+  {
+    "name": "axios",
+    "version": "1.21.0",
+    "license": "MIT",
+    "files": [
+      "axios-1.21.0/LICENSE"
+    ]
+  },
+  {
+    "name": "balloon-css",
+    "version": "1.2.0",
+    "license": "MIT",
+    "files": [
+      "balloon-css-1.2.0/LICENSE"
+    ]
+  },
+  {
+    "name": "call-bind-apply-helpers",
+    "version": "1.0.2",
+    "license": "MIT",
+    "files": [
+      "call-bind-apply-helpers-1.0.2/LICENSE"
+    ]
+  },
+  {
+    "name": "combined-stream",
+    "version": "1.0.8",
+    "license": "MIT",
+    "files": [
+      "combined-stream-1.0.8/License"
+    ]
+  },
+  {
+    "name": "debug",
+    "version": "4.4.3",
+    "license": "MIT",
+    "files": [
+      "debug-4.4.3/LICENSE"
+    ]
+  },
+  {
+    "name": "delayed-stream",
+    "version": "1.0.0",
+    "license": "MIT",
+    "files": [
+      "delayed-stream-1.0.0/License"
+    ]
+  },
+  {
+    "name": "dplayer",
+    "version": "1.27.1",
+    "license": "MIT",
+    "files": [
+      "dplayer-1.27.1/LICENSE"
+    ]
+  },
+  {
+    "name": "dunder-proto",
+    "version": "1.0.1",
+    "license": "MIT",
+    "files": [
+      "dunder-proto-1.0.1/LICENSE"
+    ]
+  },
+  {
+    "name": "es-define-property",
+    "version": "1.0.1",
+    "license": "MIT",
+    "files": [
+      "es-define-property-1.0.1/LICENSE"
+    ]
+  },
+  {
+    "name": "es-errors",
+    "version": "1.3.0",
+    "license": "MIT",
+    "files": [
+      "es-errors-1.3.0/LICENSE"
+    ]
+  },
+  {
+    "name": "es-object-atoms",
+    "version": "1.1.2",
+    "license": "MIT",
+    "files": [
+      "es-object-atoms-1.1.2/LICENSE"
+    ]
+  },
+  {
+    "name": "es-set-tostringtag",
+    "version": "2.1.0",
+    "license": "MIT",
+    "files": [
+      "es-set-tostringtag-2.1.0/LICENSE"
+    ]
+  },
+  {
+    "name": "follow-redirects",
+    "version": "1.16.2",
+    "license": "MIT",
+    "files": [
+      "follow-redirects-1.16.2/LICENSE"
+    ]
+  },
+  {
+    "name": "form-data",
+    "version": "4.0.6",
+    "license": "MIT",
+    "files": [
+      "form-data-4.0.6/License"
+    ]
+  },
+  {
+    "name": "function-bind",
+    "version": "1.1.2",
+    "license": "MIT",
+    "files": [
+      "function-bind-1.1.2/LICENSE"
+    ]
+  },
+  {
+    "name": "get-intrinsic",
+    "version": "1.3.0",
+    "license": "MIT",
+    "files": [
+      "get-intrinsic-1.3.0/LICENSE"
+    ]
+  },
+  {
+    "name": "get-proto",
+    "version": "1.0.1",
+    "license": "MIT",
+    "files": [
+      "get-proto-1.0.1/LICENSE"
+    ]
+  },
+  {
+    "name": "gopd",
+    "version": "1.2.0",
+    "license": "MIT",
+    "files": [
+      "gopd-1.2.0/LICENSE"
+    ]
+  },
+  {
+    "name": "has-symbols",
+    "version": "1.1.0",
+    "license": "MIT",
+    "files": [
+      "has-symbols-1.1.0/LICENSE"
+    ]
+  },
+  {
+    "name": "has-tostringtag",
+    "version": "1.0.2",
+    "license": "MIT",
+    "files": [
+      "has-tostringtag-1.0.2/LICENSE"
+    ]
+  },
+  {
+    "name": "hasown",
+    "version": "2.0.4",
+    "license": "MIT",
+    "files": [
+      "hasown-2.0.4/LICENSE"
+    ]
+  },
+  {
+    "name": "hls.js",
+    "version": "1.7.4",
+    "license": "Apache-2.0",
+    "files": [
+      "hls.js-1.7.4/LICENSE"
+    ]
+  },
+  {
+    "name": "https-proxy-agent",
+    "version": "5.0.1",
+    "license": "MIT",
+    "files": [
+      "https-proxy-agent-5.0.1/LICENSE.from-README.txt"
+    ]
+  },
+  {
+    "name": "lucide-react",
+    "version": "0.468.0",
+    "license": "ISC",
+    "files": [
+      "lucide-react-0.468.0/LICENSE"
+    ]
+  },
+  {
+    "name": "math-intrinsics",
+    "version": "1.1.0",
+    "license": "MIT",
+    "files": [
+      "math-intrinsics-1.1.0/LICENSE"
+    ]
+  },
+  {
+    "name": "mime-db",
+    "version": "1.52.0",
+    "license": "MIT",
+    "files": [
+      "mime-db-1.52.0/LICENSE"
+    ]
+  },
+  {
+    "name": "mime-types",
+    "version": "2.1.35",
+    "license": "MIT",
+    "files": [
+      "mime-types-2.1.35/LICENSE"
+    ]
+  },
+  {
+    "name": "ms",
+    "version": "2.1.3",
+    "license": "MIT",
+    "files": [
+      "ms-2.1.3/license.md"
+    ]
+  },
+  {
+    "name": "openhongguo",
+    "version": "0.1.0",
+    "license": "Apache-2.0",
+    "files": [
+      "openhongguo-0.1.0/GO_LICENSE",
+      "openhongguo-0.1.0/LICENSE"
+    ]
+  },
+  {
+    "name": "promise-polyfill",
+    "version": "8.3.0",
+    "license": "MIT",
+    "files": [
+      "promise-polyfill-8.3.0/LICENSE"
+    ]
+  },
+  {
+    "name": "proxy-from-env",
+    "version": "2.1.0",
+    "license": "MIT",
+    "files": [
+      "proxy-from-env-2.1.0/LICENSE"
+    ]
+  },
+  {
+    "name": "react",
+    "version": "19.3.1",
+    "license": "MIT",
+    "files": [
+      "react-19.3.1/LICENSE"
+    ]
+  },
+  {
+    "name": "react-dom",
+    "version": "19.3.1",
+    "license": "MIT",
+    "files": [
+      "react-dom-19.3.1/LICENSE"
+    ]
+  },
+  {
+    "name": "scheduler",
+    "version": "0.28.0",
+    "license": "MIT",
+    "files": [
+      "scheduler-0.28.0/LICENSE"
+    ]
+  },
+  {
+    "name": "tslib",
+    "version": "2.9.1",
+    "license": "0BSD",
+    "files": [
+      "tslib-2.9.1/CopyrightNotice.txt",
+      "tslib-2.9.1/LICENSE.txt"
+    ]
+  }
+]

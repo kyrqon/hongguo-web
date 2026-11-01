@@ -17,12 +17,10 @@ Unsplash 使用条款：https://unsplash.com/license
 
 ## 本地示例视频
 
-- 文件：`public/videos/demo.mp4`，3,026,316 字节（约 2.89 MiB）。
-- 来源：W3C 公开托管的 Sintel 预告片，https://media.w3.org/2010/05/sintel/trailer.mp4 。
-- 内容：Blender Foundation 的开放电影《Sintel》预告片前约 30 秒；仅用于播放器演示，不是真实红果短剧，界面应保留明确的示例片源标签。
-- 署名：© copyright Blender Foundation | durian.blender.org；Durian Open Movie Team。
-- 许可：Creative Commons Attribution 3.0（CC BY 3.0），https://creativecommons.org/licenses/by/3.0/ 。官方许可说明：https://durian.blender.org/sharing/ （另见 https://durian.blender.org/about/）。
-- 修改：从 52.208 秒预告片截取前 30 秒，音视频均直接复制编码，添加 MP4 faststart；原片 copyright、artist、title 元数据保留。
-- 已用 `ffprobe` 验证：时长 30.083 秒；854 × 480 H.264 视频；48 kHz 立体声 AAC 音轨。`ffmpeg volumedetect` 验证平均音量 -15.1 dB、峰值 0.0 dB，具有可听声音。
-- 视频已下载到本地，示例播放不依赖外部视频域名。
-- 原先的 MDN 花朵样片实际静音，已被本有声样片替换；Google GTV 候选地址返回 `AccessDenied`，未使用。
+- 文件：public/videos/demo.mp4，488,600 字节（约 477 KiB）。
+- 来源：本项目通过 scripts/generate-demo.mjs 调用本机 FFmpeg 程序生成，没有下载或引用第三方视频、照片、音乐、字体或标志。
+- 内容：深色网格背景与运动的橙色、蓝色方块；音轨是合成的 330 Hz 测试音，首尾各淡入、淡出 1 秒。仅用于播放器功能演示，不是真实红果短剧。
+- 重现：安装本机 FFmpeg 后运行 node scripts/generate-demo.mjs。不同编码器版本生成的文件字节可能不同。
+- 已用 ffprobe 验证：时长 30.000 秒；720 × 1280、24 fps、H.264 Main / yuv420p 视频；48 kHz 立体声 AAC 音轨。ffmpeg volumedetect 测得平均音量 -21.3 dB、峰值 -17.8 dB。
+- 本项目自行生成的媒体和生成脚本遵循项目根许可证。FFmpeg 仅作为外部生成工具，本仓库与移动包不附带其二进制。
+- 文件保存在本地，示例播放不依赖外部视频域名。

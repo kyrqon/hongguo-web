@@ -5,6 +5,8 @@ import { ArrowRight, Bookmark, Check, ChevronLeft, ChevronRight, ChevronsUpDown,
 
 import { api, ApiError } from './api'
 import DramaPlayer from './components/DramaPlayer'
+import ServerSettings from './components/ServerSettings'
+import { getApiBase, isNativeApp } from './apiConfig'
 import { demoEpisodes, demos, demoVideo } from './demo'
 import { playbackUrl, readPlaybackRoute } from './playbackRoute'
 import type { PlaybackRoute } from './playbackRoute'
@@ -23,6 +25,11 @@ type EpisodePageState = { dramaId: string; items: Episode[]; cursor: string; has
 type EpisodeAdvance = { page: EpisodePageState; afterId: string; continueFeed: boolean }
 
 export default function App() {
+  if (isNativeApp() && !getApiBase()) return <main className="native-server-setup"><section className="native-server-card"><ServerSettings initialSetup /></section></main>
+  return <PlayerApp />
+}
+
+function PlayerApp() {
   const initialRoute = useRef(readPlaybackRoute(window.location.href))
   const pendingRoute = useRef<(PlaybackRoute & { autoplay: boolean }) | null>(initialRoute.current.dramaId ? { ...initialRoute.current, autoplay: false } : null)
   const [routeRevision, setRouteRevision] = useState(0)
@@ -76,6 +83,7 @@ export default function App() {
   const [liked, setLiked] = useState<string[]>([])
   const [toast, setToast] = useState('')
   const [infoOpen, setInfoOpen] = useState(false)
+  const [serverSettingsOpen, setServerSettingsOpen] = useState(false)
   const [authError, setAuthError] = useState('')
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
   const [authBusy, setAuthBusy] = useState(false)
@@ -438,7 +446,7 @@ export default function App() {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (authOpen || infoOpen || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLSelectElement) return
+      if (authOpen || infoOpen || serverSettingsOpen || event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLSelectElement) return
       if (event.target instanceof Element && event.target.closest('.episode-drawer, .dplayer-controller, .dplayer-setting, .dplayer-menu')) return
       if (event.code === 'Space' && !(event.target instanceof HTMLButtonElement)) { event.preventDefault(); togglePlay() }
       if (event.key === 'ArrowDown') { event.preventDefault(); void nextDrama(1) }
@@ -452,18 +460,19 @@ export default function App() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [authOpen, infoOpen, nextDrama, togglePlay, streamConverted])
+  }, [authOpen, infoOpen, serverSettingsOpen, nextDrama, togglePlay, streamConverted])
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
-      if (authOpen) setAuthOpen(false)
+      if (serverSettingsOpen) setServerSettingsOpen(false)
+      else if (authOpen) setAuthOpen(false)
       else if (episodesOpen) setEpisodesOpen(false)
       else if (infoOpen) setInfoOpen(false)
       else setTheaterMode(false)
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [authOpen, episodesOpen, infoOpen])
+  }, [authOpen, episodesOpen, infoOpen, serverSettingsOpen])
 
   const changeSource = (next: 'hongguo' | 'demo') => {
     clearRouteTarget(); autoPlayNext.current = false
@@ -507,9 +516,12 @@ export default function App() {
     try { await navigator.clipboard.writeText(url.toString()); notify('链接已复制') }
     catch { notify('无法访问剪贴板，请复制浏览器地址分享') }
   }
+  const openServerSettings = () => {
+    saveProgress(); videoRef.current?.pause(); setInfoOpen(false); setServerSettingsOpen(true)
+  }
 
   const onTouchEnd = (event: TouchEvent) => {
-    if (authOpen || infoOpen) return
+    if (authOpen || infoOpen || serverSettingsOpen) return
     if (event.target instanceof Element && event.target.closest('.episode-drawer, .dplayer-controller, .dplayer-setting, .dplayer-menu')) return
     const touch = event.changedTouches[0]
     const dy = touchStart.current.y - touch.clientY
@@ -517,7 +529,7 @@ export default function App() {
     if (Math.abs(dy) > 65 && Math.abs(dy) > Math.abs(dx) * 1.4) void nextDrama(dy > 0 ? 1 : -1)
   }
   const onWheel = (event: React.WheelEvent) => {
-    if (event.ctrlKey || authOpen || infoOpen) return
+    if (event.ctrlKey || authOpen || infoOpen || serverSettingsOpen) return
     if (event.target instanceof Element && event.target.closest('.episode-drawer, .dplayer-controller, .dplayer-setting, .dplayer-menu, .stage-tools, .player-actions, .feed-navigation')) return
     if (Math.abs(event.deltaY) < 25 || Date.now() - gestureTime.current < 900) return
     gestureTime.current = Date.now(); void nextDrama(event.deltaY > 0 ? 1 : -1)
@@ -529,6 +541,7 @@ export default function App() {
       <button className="brand" onClick={() => navigate('recommend')} aria-label="红果首页"><span className="brand-icon"><Play size={23} fill="currentColor" /></span><span>红果<span className="brand-divider" /><span className="brand-sub">短剧</span></span></button>
       <form className="search-form" onSubmit={performSearch}><Search size={19} /><input aria-label="搜索短剧" value={query} onChange={event => setQuery(event.target.value)} placeholder="搜索剧名，发现你的心动好剧" />{query && <button type="button" className="icon-button" onClick={() => { setQuery(''); if (search) { clearRouteTarget(); setSearch('') } }} aria-label="清空搜索"><X size={15} /></button>}<button className="search-submit" aria-label="提交搜索">搜索</button></form>
       <div className="header-actions"><span className={`source-dot ${source === 'demo' ? 'demo-dot' : ''}`} /><select aria-label="选择片源" value={source} onChange={event => { changeSource(event.target.value as 'hongguo' | 'demo') }}><option value="hongguo">红果片源</option><option value="demo">示例片源</option></select><button className="header-user" onClick={() => user ? navigate('favorites') : setAuthOpen(true)}><span className="avatar">{user ? user.username[0].toUpperCase() : <LogIn size={16} />}</span><span>{user?.username || '本站登录 / 注册'}</span></button></div>
+      {isNativeApp() && <button className="server-settings-trigger" aria-label="服务地址" title="服务地址" onClick={openServerSettings}><Settings2 size={19} /></button>}
     </header>
 
     <aside className="sidebar">
@@ -566,7 +579,7 @@ export default function App() {
                   onToggleFullscreen={toggleFullscreen} theaterMode={theaterMode} fullscreen={fullscreen}
                 />
                 <div className="video-shade" />
-                {drama.source === 'demo' && <div className="demo-credit">示例视频：<a href="https://durian.blender.org/" target="_blank" rel="noreferrer">Sintel © Blender Foundation</a> · <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noreferrer">CC BY 3.0</a></div>}
+                {drama.source === 'demo' && <div className="demo-credit">本地生成的有声测试视频 · 不含真实剧集内容</div>}
                 <div className="player-top"><span className="original-badge"><span className="brand-mini"><Play size={10} fill="currentColor" /></span> {drama.source === 'demo' ? '示例短剧' : '红果短剧'}</span><span className="episode-indicator">第 {episodes[episode]?.index || 1} 集{drama.episodeCount ? ` / 共 ${drama.episodeCount} 集` : ''}</span></div>
                 {!started && !videoLoading && !playError && <button className="big-play" onClick={togglePlay} disabled={episodeLoading || !episodes.length} aria-label="播放短剧"><Play size={30} fill="currentColor" strokeWidth={1} /></button>}
                 {videoLoading && !videoUrl && <div className="video-status"><LoaderCircle className="spin" size={32} /><span>正在准备播放…</span></div>}
@@ -586,7 +599,8 @@ export default function App() {
     <nav className="mobile-nav">{navItems.map(item => <button key={item.id} className={section === item.id ? 'active' : ''} onClick={() => navigate(item.id)}><item.icon size={21} /><span>{item.title.replace('为你', '').replace('好剧', '')}</span></button>)}<button onClick={() => user ? navigate('favorites') : setAuthOpen(true)}><span className="mobile-avatar">{user ? user.username[0] : <LogIn size={20} />}</span><span>{user ? '我的' : '本站登录'}</span></button></nav>
 
     {authOpen && <Modal title={authMode === 'login' ? '登录本站账号' : '注册本站账号'} onClose={() => setAuthOpen(false)} className="auth-modal"><div className="auth-brand"><span className="brand-icon"><Play size={23} fill="currentColor" /></span></div><p className="auth-description">保存本站收藏和观看进度。尚未接入红果官方登录。</p><form onSubmit={authenticate}><label>本站用户名<input name="username" autoComplete="username" placeholder="输入用户名（至少 2 个字符）" minLength={2} maxLength={32} required /></label><label>密码<input name="password" type="password" autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} placeholder="输入密码（至少 8 个字符）" minLength={8} maxLength={128} required /></label>{authError && <p className="inline-error" role="alert">{authError}</p>}<button className="primary-button" disabled={authBusy}>{authBusy ? <LoaderCircle className="spin" size={17} /> : null}{authMode === 'login' ? '登录本站账号' : '创建本站账号'}<ArrowRight size={16} /></button></form><p className="auth-switch">{authMode === 'login' ? '第一次来？' : '已经有账号？'}<button onClick={() => { setAuthMode(authMode === 'login' ? 'register' : 'login'); setAuthError('') }}>{authMode === 'login' ? '注册本站账号' : '去登录本站账号'}</button></p><div className="auth-note"><Bookmark size={14} /><span>这是本站账号，用于保存收藏和进度。<br />不关联红果官方账号。</span></div></Modal>}
-    {infoOpen && <Modal title="欢迎来到你的私人放映室" onClose={() => setInfoOpen(false)}><div className="help-copy"><p>鼠标在画面上滚动，或使用 ↑ ↓ 切换短剧。手机上在画面内上下滑动即可刷剧。</p><p>点击画面中间开始播放，空格暂停。点击「选集」切换分集，播完后自动播放下一集。</p><p>登录本站账号后，收藏和观看进度保存在你运行的后端中。当前账号不关联红果官方账号。</p><p>「红果片源」通过 openhongguo 读取真实目录。示例片源仅演示界面，剧名、封面和测试视频并不对应真实短剧。部分上游分集受访问限制或加密保护，浏览器无法播放时会显示原因。</p><a href="https://github.com/beilunyang/openhongguo" target="_blank" rel="noreferrer">查看参考项目 <ArrowRight size={14} /></a></div></Modal>}
+    {infoOpen && <Modal title="欢迎来到你的私人放映室" onClose={() => setInfoOpen(false)}><div className="help-copy"><p>鼠标在画面上滚动，或使用 ↑ ↓ 切换短剧。手机上在画面内上下滑动即可刷剧。</p><p>点击画面中间开始播放，空格暂停。点击「选集」切换分集，播完后自动播放下一集。</p><p>登录本站账号后，收藏和观看进度保存在你运行的后端中。当前账号不关联红果官方账号。</p><p>「红果片源」通过 openhongguo 读取真实目录。示例片源仅演示界面，剧名、封面和测试视频并不对应真实短剧。部分上游分集受访问限制或加密保护，浏览器无法播放时会显示原因。</p><button className="help-server-settings" onClick={openServerSettings}><Settings2 size={16} />服务地址设置<ArrowRight size={14} /></button><a href="https://github.com/beilunyang/openhongguo" target="_blank" rel="noreferrer">查看参考项目 <ArrowRight size={14} /></a></div></Modal>}
+    {serverSettingsOpen && <Modal title="服务地址" onClose={() => setServerSettingsOpen(false)} className="server-settings-modal"><ServerSettings /></Modal>}
     {toast && createPortal(<div className="toast" role="status"><Check size={16} />{toast}</div>, document.fullscreenElement || document.body)}
   </div>
 }

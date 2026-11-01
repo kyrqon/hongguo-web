@@ -1,0 +1,10 @@
+import { appendFileSync, readFileSync } from 'node:fs';
+const fromTag = process.env.GITHUB_REF_TYPE === 'tag' ? process.env.GITHUB_REF_NAME : '';
+const tag = fromTag || process.env.RELEASE_TAG || '';
+const version = tag ? tag.replace(/^v/, '') : JSON.parse(readFileSync('package.json', 'utf8')).version;
+if (!/^\d+\.\d+\.\d+(?:-[A-Za-z0-9]+(?:[.-][A-Za-z0-9]+)*)?$/.test(version) || (tag && tag !== `v${version}`)) throw new Error('Use a version tag such as v0.1.0-preview.1');
+const publish = Boolean(fromTag) || process.env.PUBLISH_RELEASE === 'true';
+if (publish && !tag) throw new Error('A release tag is required to publish');
+const output = `version=${version}\ntag=${tag}\npublish=${publish}\n`;
+if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, output);
+console.log(output);
