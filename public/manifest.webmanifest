@@ -1,0 +1,21 @@
+{
+  "id": "/",
+  "name": "红果剧场",
+  "short_name": "红果剧场",
+  "description": "你的私人短剧放映室，搜索、追剧、收藏，随心看。",
+  "lang": "zh-CN",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#101014",
+  "theme_color": "#101014",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

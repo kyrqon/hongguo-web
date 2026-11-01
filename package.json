@@ -1,0 +1,45 @@
+{
+  "name": "hongguo-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n api,web \"node --env-file-if-exists=.env --watch server/index.mjs\" \"vite --host 0.0.0.0\"",
+    "dev:web": "vite --host 0.0.0.0",
+    "dev:api": "node --env-file-if-exists=.env --watch server/index.mjs",
+    "build": "tsc -b && vite build",
+    "start": "node --env-file-if-exists=.env server/index.mjs",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "node --test server/*.test.mjs",
+    "mobile:sync": "npm run build && cap sync",
+    "mobile:android": "cap open android",
+    "mobile:ios": "cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/ios": "^8.0.0",
+    "dplayer": "^1.27.1",
+    "hls.js": "^1.6.0",
+    "lucide-react": "^0.468.0",
+    "openhongguo": "^0.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.0.0",
+    "@types/dplayer": "^1.25.6",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "concurrently": "^9.1.0",
+    "typescript": "~5.8.3",
+    "vite": "^8.3.5"
+  },
+  "overrides": {
+    "dplayer": {
+      "axios": "^1.21.0"
+    }
+  }
+}
